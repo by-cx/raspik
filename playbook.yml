@@ -1,0 +1,14 @@
+---
+- hosts: all
+  become: yes
+  become_user: root
+  vars:
+    restic_version: 0.9.5
+    config_directory: /etc/raspirack
+  # tasks:
+  #   - debug: msg="{{ users }}"
+  roles:
+    - { role: basics, tags: [basics] }
+    - { role: drives, tags: [drives] }
+    - { role: samba, tags: [samba] }
+    - { role: backup, tags: [backup] }

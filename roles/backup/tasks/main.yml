@@ -1,0 +1,30 @@
+---
+
+- name: Install Restic
+  get_url:
+    url: https://github.com/restic/restic/releases/download/v{{ restic_version }}/restic_{{ restic_version }}_linux_arm.bz2
+    dest: /usr/src/
+
+- name: Process the restic binary
+  shell: |
+    cd /usr/src
+    bzip2 -k -d restic_{{ restic_version }}_linux_arm.bz2
+    mv restic_{{ restic_version }}_linux_arm /usr/local/bin/restic
+    chmod 755 /usr/local/bin/restic
+
+- name: Restic backup script
+  template:
+      dest: /usr/local/bin/backup.sh
+      src: backup.sh
+      mode: 0755
+
+- name: Backup drives cronjob
+  cron:
+    minute: "0"
+    hour: "3"
+    day: "*"
+    month: "*"
+    weekday: "*"
+    job: /usr/local/bin/backup.sh
+    name: Backup drives
+    state: present

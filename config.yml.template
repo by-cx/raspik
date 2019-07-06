@@ -1,0 +1,40 @@
+# General
+general:
+  samba_home_directories: true
+  homes_drive: 0 # Index of drive where user's private shares are created
+  shared_group: shared
+
+# Backup configuration
+backup:
+  keep_daily: 3
+  keep_weekly: 2
+  keep_monthly: 3
+  restic_env:
+    # Environment variables compatible with Restic 
+    # Backup to DigitalOcean S3 compatible Spaces service
+    AWS_ACCESS_KEY_ID: XXXXX
+    AWS_SECRET_ACCESS_KEY: XXXX
+    RESTIC_PASSWORD: XXXXX
+    RESTIC_REPOSITORY: s3:ams3.digitaloceanspaces.com/BUCKET
+
+# User accounts
+users:
+  - name: user1
+    password: users_password
+  - name: user2
+    password: users_password
+
+# Physical drives for your data
+drives:
+  # This drive will be mounted to /mnt/ssd500
+  # Encryption password is inserted while mounting process is happening
+  - name: ssd500
+    uuid: 0618649e-380b-4048-bc78-6533af378cf6
+    encryption: true
+
+# Samba shares
+shares:
+  - name: photos 
+    drive: 0 # Index of drive where this share is located
+  - name: data
+    drive: 0

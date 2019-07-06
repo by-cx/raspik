@@ -1,0 +1,41 @@
+---
+
+- name: Setup up encrypted drives
+  command: cryptsetup open /dev/disk/by-uuid/{{ item.uuid }} {{ item.name }}
+  tags:
+    - never
+    - mount
+  with_items: "{{ drives }}"
+  when: item.encrypted
+
+- name: Prepare mount points
+  file:
+      path: /mnt/{{ item.name }}
+      state: directory
+      mode: 755
+      owner: root
+      group: {{ general.shared_group }}
+  tags:
+    - never
+    - mount
+  with_items: "{{ drives }}"
+
+- name: Mount drives
+  command: mount -o defaults /dev/mapper/{{ item.name }} /mnt/{{ item.name }}
+  tags:
+    - never
+    - mount
+  with_items: "{{ drives }}"
+
+- name: Umount drivers
+  tags:
+    - never
+    - umount
+
+- name: Close encrypted drives
+  command: cryptsetup close /dev/mapper/{{ item.name }}
+  tags:
+    - never
+    - umount
+  with_items: "{{ drives }}"
+  when: item.encrypted

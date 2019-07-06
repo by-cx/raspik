@@ -1,0 +1,24 @@
+---
+
+- name: Install samba related packages
+  apt:
+    name:
+      - samba
+      - samba-common-bin
+    state: present
+    update_cache: yes
+  environment:
+    RUNLEVEL: 1
+
+- name: Samba service
+  systemd:
+      name: smbd
+      enabled: yes
+      state: started
+
+- name: Samba config file
+  template:
+      dest: /etc/samba/smb.conf
+      src: smb.conf
+  notify:
+    - samba reload config
