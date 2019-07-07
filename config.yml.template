@@ -30,7 +30,7 @@ drives:
   # Encryption password is inserted while mounting process is happening
   - name: ssd500
     uuid: 0618649e-380b-4048-bc78-6533af378cf6
-    encryption: true
+    encrypted: true
 
 # Samba shares
 shares:

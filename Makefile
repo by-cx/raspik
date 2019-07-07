@@ -3,7 +3,7 @@ install:
 	ansible-playbook -s -U root -i "localhost," -c local -e @/etc/raspirack/config.yml playbook.yml
 
 mount:
-	ansible-playbook -s -U root -i "localhost," -c local -e @/etc/raspirack/config.yml -t mount playbook.yml
+	echo "Encryption password: " && read ENCRYPTION_PASSWORD && ansible-playbook -s -U root -i "localhost," -c local -e @/etc/raspirack/config.yml -e ENCRYPTION_PASSWORD=$$ENCRYPTION_PASSWORD -t mount playbook.yml
 
 umount:
 	ansible-playbook -s -U root -i "localhost," -c local -e @/etc/raspirack/config.yml -t umount playbook.yml

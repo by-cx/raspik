@@ -1,7 +1,7 @@
 ---
 
 - name: Setup up encrypted drives
-  command: cryptsetup open /dev/disk/by-uuid/{{ item.uuid }} {{ item.name }}
+  shell: echo "{{ ENCRYPTION_PASSWORD }}" | cryptsetup open /dev/disk/by-uuid/{{ item.uuid }} {{ item.name }}
   tags:
     - never
     - mount
@@ -14,7 +14,7 @@
       state: directory
       mode: 755
       owner: root
-      group: {{ general.shared_group }}
+      group: "{{ general.shared_group }}"
   tags:
     - never
     - mount
@@ -28,9 +28,11 @@
   with_items: "{{ drives }}"
 
 - name: Umount drivers
+  command: umount /dev/mapper/{{ item.name }}
   tags:
     - never
     - umount
+  with_items: "{{ drives }}"
 
 - name: Close encrypted drives
   command: cryptsetup close /dev/mapper/{{ item.name }}

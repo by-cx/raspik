@@ -22,3 +22,9 @@
       src: smb.conf
   notify:
     - samba reload config
+
+- name: Set samba and system passwords
+  command: smbpasswd -a -s {{ item.name }}
+  args:
+    stdin: "{{ item.password }}\n{{ item.password }}"
+  with_items: "{{ users }}"

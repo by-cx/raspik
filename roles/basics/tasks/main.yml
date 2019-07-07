@@ -26,13 +26,10 @@
 - name: Create or update users
   user:
       name: "{{ item.name }}"
-      home: "{{ drives[general.homes_drive].mount }}/homes/{{ item.name }}"
+      home: "/mnt/{{ drives[general.homes_drive].name }}/homes/{{ item.name }}"
       create_home: yes
       groups:
         - "{{ general.shared_group }}"
       state: present # not required. choices: absent;present. Whether the account should exist or not, taking action if the state is different from what is stated.
   with_items: "{{ users }}"
 
-- name: Set samba and system passwords
-  shell: echo -ne "{{ item.password }}\n{{ item.password }}" | smbpasswd -a -s cx
-  with_items: "{{ users }}"
