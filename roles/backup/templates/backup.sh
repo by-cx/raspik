@@ -1,5 +1,18 @@
 #!/usr/bin/fish
 
+set PIDFILE /run/backup.pid
+
+if test ! -e $PIDFILE
+    echo 999999 > $PIDFILE
+end
+
+if ps -A | cut -d" " -f 1 | grep -e "^(cat $PIDFILE)\$" > /dev/null
+    echo "Bacup process is already running"
+    exit 5
+end
+
+echo %self > $PIDFILE
+
 {% for key, value in backup.restic_env.items() %}
 set -x {{ key }} "{{ value }}"
 {% endfor %}
