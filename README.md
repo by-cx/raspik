@@ -4,6 +4,12 @@ Goal of this project is to deliver home made NAS from scratch. The hardware part
 
 I am happy user of Synology NAS and my DS216play has been in use for a few year now. It's pretty neat piece of hardware but it's not perfect. Encryption is slow and can't be used for photos managed by Synology's PhotoStation. Also the interface became slow after the years and a lot of updates that I started using only fraction of its capabilities. They are Samba shares, backup and SynologyDrive. Time of replacing this device is coming so I decided to explore possibilities of building it myself. Raspberry Pi 4 is out. Its encryption capabilities are not the best but also not the worst and it supports USB 3 devices. The only missing piece is the case and software that would make managing my data easy again.
 
+You don't need the case to use the software part and vice versa.
+
+## Quick tutorial
+
+
+
 ## The Rack
 
 I designed modular case for Raspberry Pi that is not just for one purpose but it could help you with your other projects too. It has 8 slots where you can put different kind of hardware like:
@@ -18,9 +24,47 @@ The main idea behind this is I wanted to have a place where I can put two Raspbe
 
 There is still a lot of work in the hardware part, especially in power supply and switch part, because they take a lot of space but if you want it's good enough to use it. My Raspberry is sitting inside right now without any issue.
 
+Dimensions of the case:
+
+* Whole case: 206 × 128 × 173 mm
+* Blade: 1.6 × 110 × 149 mm (space for your equipment is 22 × 110 × 149 mm)
+* Blade with sliders: 1.6 × 115 × 149 mm 
+
+Cooling is handled by a fan 92×92 mm. It can be attached at the back of front of the case. Except this front/back part there is one big and one small part. You can use them to cover front/back panels exactly like you want. The 92×92 mm fans are usually 12 V but they work perfectly on 5 V too. Raspberry Pi doesn't need anything extra. Slowly moving air is enough even in during the summer.
+
+## Blades
+
+I use multiple Raspberry Pis so having more than one of them in one case is added value I couldn't miss while I was working on the case. RPis are pretty sensitive about power supply and I needed two 2.5" SSD and 433 MHz antenna inside. Handle all of it inside one box made smile on my face :-) Let's check each blade. Standard server racks were great inspiration for me so the this case looks like one of them.
+
+### Power supply blade
+
+I use switching power supply [MEAN WELL LRS-75-5](http://www.mean-well.cz/assets/data/LRS-75-spec.pdf). It's sold here in Czech Republic. It delivers max. 14 A in 5 V. The maximal current is much bigger than I need or I will need. On the other hand if you decide to fill all 8 slots with RPis this power source can handle it. If I am choosing the power supply now I would pick something with 5 V and 12 V output. That allows to supply 3.5" HDD. Unfortunately 3.5" HDD barely fits inside the rack.
+
+I lost source code for this blade and only I have is STL. I will add the source code once I decide to redesign it.
+
+This blade requires two slots inside the case.
+
+### Switch blade
+
+I would say this blade is optional. You can depend on WiFi or having the switch somewhere else. I use Tenda TEG1005D. It's super small, 1 Gbit switch that fits inside perfectly. The switch is glued to the blade.
+
+As the power supply blade this one also requires two slots. I am planning to squeeze them together so they need only three slots in total.
+
+### 2.5" HDD/SSD blade
+
+This blade is designed around [Icy Box IB-AC703-U3](https://www.amazon.de/IB-AC703-U3-SATA-Adapter-Schutzbox-Laufwerk-wei%C3%9F/dp/B01GDZACDK). It works almost perfectly with Raspberry Pi. Unfortunately there is a bug in RPi's kernel that doesn't support UAS. That means you have to force usb-storage module. If you encouter same problem add this piece in */boot/cmdline.txt*:
+
+    usb-storage.quirks=152d:0578:u
+
+The number can be found via *lsusb* and don't forget the *:u* at the end. After reboot RPi won't try to use UAS and the driver will work just fine.
+
+### Raspberry Pi blade
+
+This blade supports any Raspberry Pi type A and B from version 2 to the most recent ones. The whole case is designed for Raspberry Pi so the holes on the side panels follow RPis dimensions and they let you to connect anything what RPi allows you without much trouble.
+
 ## The main features
 
-This project is designed by my needs but feel free to send an idea or pull request. What ever you done to help this project, please keep in mind it's focused mainly to hobbyist and home users. The main features I don't want to break are those:
+This project is designed to cover my needs but feel free to send me an idea or pull request. What ever you do to help this project, please keep in mind, it's focused mainly to hobbyist and home users.
 
 ### Security
 
@@ -28,8 +72,8 @@ All data you send to RaspiRack should be encrypted. Your files like photos, docu
 
 ### Backup
 
-Implementing RAID with Raspberry Pi for could be overhead. Hard drives are not failing every day so this project focuses on doing proper backups instead. It uses [Restic](https://restic.net/) that supports many backend and allows doing backups every hour without significant load for your internet connection. I am honestly telling you that this project won't protect you from losing recently uploaded files just before hardware failure happens, but it makes sure you won't loose all your data in that case.
+In home based environment RAID covers situations that won't occur much. For example if one hard drive fails usually you are ok to wait a little bit until new drive arrives so it can be fixed. What you do care is the data. This project is focused to deliver the best backup solution instead of 100 % uptime. It uses [Restic](https://restic.net/) that supports many backends and allows doing backups every hour without significant load for your internet connection.
 
 ### Simplicity
 
-The structure of shares is split into two zones. The first one is private space for all users and shared space for those users. That means every user has his own space where he can upload his private data no body else can see. The shared space is every other Samba share that is created additionally in the configuration. Those shares are available for all users.
+I would like to keep the future user interface as simple as possible. I prefer plug&play solutions over the most flexible ones. Sometimes it's going hand by hand, sometimes flexibility takes a price on usability. That's why I decided to use Ansible and Raspbian because the basic product can be delivered in days instead of weeks. Same time it's very easy to configure the whole project and set it up with a single command.
