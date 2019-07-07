@@ -6,8 +6,8 @@ if test ! -e $PIDFILE
     echo 999999 > $PIDFILE
 end
 
-if ps -A | cut -d" " -f 1 | grep -e "^(cat $PIDFILE)\$" > /dev/null
-    echo "Bacup process is already running"
+if ps -A | sed "s/^[ ]*//g" | cut -d" " -f 1 | grep -e \^(cat $PIDFILE)\$ > /dev/null
+    echo "Backup process is already running"
     exit 5
 end
 
