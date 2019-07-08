@@ -4,6 +4,7 @@
   become_user: root
   vars:
     restic_version: 0.9.5
+    syncthing_version: 1.1.4
     config_directory: /etc/raspirack
   # tasks:
   #   - debug: msg="{{ users }}"
@@ -12,3 +13,4 @@
     - { role: drives, tags: [drives] }
     - { role: samba, tags: [samba] }
     - { role: backup, tags: [backup] }
+    - { role: syncthing, tags: [syncthing] }

@@ -10,3 +10,6 @@ umount:
 
 remote:
 	ansible-playbook -u pi -i "192.168.1.2," -e @config.yml playbook.yml
+
+sync:
+	rsync -av --exclude .git/ --exclude config.yml --exclude .history/ --exclude .vscode/ ./ pi@192.168.1.2:/home/pi/raspirack/

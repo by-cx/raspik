@@ -1,0 +1,48 @@
+---
+#docker run -e PUID=1001 -e PGID=1001 -v /mnt/ssd500/homes/cx/synced:/var/syncthing -p 8384:8384 -p 22000:22000 -p 21027:21027/udp syncthing/syncthing
+
+- name: Download syncthing
+  unarchive:
+      src: https://github.com/syncthing/syncthing/releases/download/v{{ syncthing_version }}/syncthing-linux-arm-v{{ syncthing_version }}.tar.gz
+      dest: /usr/src
+      remote_src: yes
+
+- name: Copy syncthing binary
+  copy:
+      src: /usr/src/syncthing-linux-arm-v{{ syncthing_version }}/syncthing
+      dest: /usr/local/bin/syncthing
+      remote_src: yes
+      mode: 0755
+
+- name: Copy syncthing service file
+  copy:
+      src: /usr/src/syncthing-linux-arm-v{{ syncthing_version }}/etc/linux-systemd/system/{{ item }}
+      dest: /etc/systemd/system/
+      remote_src: yes
+  with_items:
+  - syncthing@.service
+  - syncthing-resume.service
+
+- name: Update the main service file
+  lineinfile:
+      path: /etc/systemd/system/syncthing@.service
+      regexp: "^ExecStart="
+      line: "ExecStart=/usr/local/bin/syncthing -no-browser -no-restart -logflags=0"
+
+- name: Enable syncthing services
+  systemd:
+      name: syncthing@{{ item.name }}
+      enabled: yes
+      daemon_reload: yes
+      state: restarted
+  with_items: "{{ users }}"
+  when: item.syncthing
+
+- name: Disable syncthing services
+  systemd:
+      name: syncthing@{{ item.name }}
+      enabled: no
+      daemon_reload: yes
+      state: stopped
+  with_items: "{{ users }}"
+  when: not item.syncthing
