@@ -19,7 +19,7 @@
       src: /usr/src/syncthing-linux-arm-v{{ syncthing_version }}/etc/linux-systemd/system/{{ item }}
       dest: /etc/systemd/system/
       remote_src: yes
-  with_items:
+  loop:
   - syncthing@.service
   - syncthing-resume.service
 
@@ -35,8 +35,8 @@
       enabled: yes
       daemon_reload: yes
       state: restarted
-  with_items: "{{ users }}"
-  when: item.syncthing
+  loop: "{{ users }}"
+  when: item.services.syncthing.enabled
 
 - name: Disable syncthing services
   systemd:
@@ -44,5 +44,50 @@
       enabled: no
       daemon_reload: yes
       state: stopped
-  with_items: "{{ users }}"
-  when: not item.syncthing
+  loop: "{{ users }}"
+  when: not item.services.syncthing.enabled
+
+# TODO: Doesn't work for some reason, fix it.
+# - name: Wait for config being created
+#   loop: "{{ users }}"
+#   wait_for:
+#     path: /mnt/{{ drives[general.homes_drive].name }}/homes/{{ item.name }}/.config/syncthing/config.xml
+#     state: present
+
+- name: Set GUI address
+  lineinfile:
+      path: /mnt/{{ drives[general.homes_drive].name }}/homes/{{ item.name }}/.config/syncthing/config.xml
+      state: present
+      regexp: "<address>.*</address>"
+      line: "        <address>0.0.0.0:{{ 8384 + idx }}</address>"
+  loop: "{{ users }}"
+  loop_control:
+    index_var: idx
+  when: item.services.syncthing.enabled
+
+- name: Set password
+  lineinfile:
+      path: /mnt/{{ drives[general.homes_drive].name }}/homes/{{ item.name }}/.config/syncthing/config.xml
+      state: present
+      regexp: "<password>.*</password>"
+      line: "        <password>{{ item.password_hash }}</password>"
+  loop: "{{ users }}"
+  when: item.services.syncthing.enabled
+
+- name: Set username
+  lineinfile:
+      path: /mnt/{{ drives[general.homes_drive].name }}/homes/{{ item.name }}/.config/syncthing/config.xml
+      state: present
+      regexp: "<user>.*</user>"
+      line: "        <user>{{ item.name }}</user>"
+  loop: "{{ users }}"
+  when: item.services.syncthing.enabled
+
+- name: Enable syncthing services
+  systemd:
+      name: syncthing@{{ item.name }}
+      enabled: yes
+      daemon_reload: yes
+      state: restarted
+  loop: "{{ users }}"
+  when: item.services.syncthing.enabled

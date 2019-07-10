@@ -10,6 +10,7 @@
       - cryptsetup
       - bzip2
       - fish
+      - whois
     state: present
     update_cache: yes
   environment:

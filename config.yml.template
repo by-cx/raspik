@@ -21,10 +21,14 @@ backup:
 users:
   - name: user1
     password: users_password
-    syncthing: true
+    services:
+      syncthing:
+        enabled: true
   - name: user2
     password: users_password
-    syncthing: false
+    services:
+      syncthing:
+        enabled: false
 
 # Physical drives for your data
 drives:
