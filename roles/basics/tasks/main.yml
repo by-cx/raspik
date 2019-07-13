@@ -11,6 +11,11 @@
       - bzip2
       - fish
       - whois
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg2
+      - software-properties-common
     state: present
     update_cache: yes
   environment:
@@ -34,3 +39,26 @@
       state: present # not required. choices: absent;present. Whether the account should exist or not, taking action if the state is different from what is stated.
   with_items: "{{ users }}"
 
+# Docker
+
+# Doesn't work with the new Raspbian yet
+# - name: Docker CE repo key
+#   apt_key:
+#       url: https://download.docker.com/linux/debian/gpg
+#       state: present
+
+# - name: Docker CE repo
+#   apt_repository:
+#       repo: "deb [arch=armhf] https://download.docker.com/linux/debian    buster    stable"
+#       state: present
+
+# - name: Update apt cache
+#   apt: update_cache=yes
+
+# - name: Install docker CE
+#   apt:
+#       name: "{{ item }}"
+#   loop:
+#     - docker-ce
+#     - docker-ce-cli
+#     - containerd.io

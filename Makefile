@@ -13,3 +13,6 @@ remote:
 
 sync:
 	rsync -av --exclude .git/ --exclude config.yml --exclude .history/ --exclude .vscode/ ./ pi@192.168.1.2:/home/pi/raspirack/
+
+build:
+	go build -o api src/main/*.go
