@@ -32,7 +32,7 @@
 - name: Enable syncthing services
   systemd:
       name: syncthing@{{ item.name }}
-      enabled: yes
+      enabled: no # Syncthing can't start automatically because mounting encrypted volumes is manual job
       daemon_reload: yes
       state: restarted
   loop: "{{ users }}"
@@ -91,3 +91,9 @@
       state: restarted
   loop: "{{ users }}"
   when: item.services.syncthing.enabled
+
+- name: Increase inotify max_user_watches
+  sysctl:
+    name: fs.inotify.max_user_watches
+    value: "500000"
+    state: present

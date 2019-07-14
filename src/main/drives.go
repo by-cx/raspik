@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 )
 
 const driveMapperPath = "/dev/mapper/%s"
@@ -14,13 +13,17 @@ const mountsPath = "/proc/mounts"
 
 // DriveStatus contains information about specific drive
 type DriveStatus struct {
-	Name      string // Human redable name
-	UUID      string // UUID from /dev/disks/by-uuid
-	Password  string // Password to dencrypt the drive
-	Encrypted bool   // True if the drive is configured as encrypted
-	Mounted   bool   // True if mounted
-	Opened    bool   // True in case the drive is encrypted and cryptsetup open finished without any error
-	Smart     string // String with: ok (nothing wrong is happening), warning (good to look for a new one), error (replace the drive ASAP), Unknown (we don't know)
+	Name      string `json:"name"`      // Human redable name
+	UUID      string `json:"uuid"`      // UUID from /dev/disks/by-uuid
+	Encrypted bool   `json:"encrypted"` // True if the drive is configured as encrypted
+	Mounted   bool   `json:"mounted"`   // True if mounted
+	Opened    bool   `json:"opened"`    // True in case the drive is encrypted and cryptsetup open finished without any error
+	Smart     string `json:"smart"`     // String with: ok (nothing wrong is happening), warning (good to look for a new one), error (replace the drive ASAP), Unknown (we don't know)
+}
+
+// IsReady returns true if the drive is mounted and opened
+func (d *DriveStatus) IsReady() bool {
+	return d.Mounted && d.Opened
 }
 
 // GetDriveStatus returns filled DriveStatus struct where information about the drive is saved
@@ -60,48 +63,35 @@ func GetDriveStatus(driveIndex uint) (*DriveStatus, error) {
 }
 
 // MountDrive mounts drive defined in status variables
-func MountDrive(status *DriveStatus) ([]byte, error) {
-	src := fmt.Sprintf(driveMapperPath, status.Name)
-	target := fmt.Sprintf(driveMntPath, status.Name)
-	cmd := fmt.Sprintf("mount -o default %s %s", src, target)
-
-	out, err := exec.Command(cmd).Output()
+func (d *DriveStatus) MountDrive() ([]byte, error) {
+	src := fmt.Sprintf(driveMapperPath, d.Name)
+	target := fmt.Sprintf(driveMntPath, d.Name)
+	args := []string{src, target}
+	out, err := runCommand("/bin/mount", args, nil)
 	return out, err
 }
 
 // UmountDrive umounts drive defined in status variables
-func UmountDrive(status *DriveStatus) ([]byte, error) {
-	target := fmt.Sprintf(driveMntPath, status.Name)
-	cmd := fmt.Sprintf("umount %s", target)
+func (d *DriveStatus) UmountDrive() ([]byte, error) {
+	target := fmt.Sprintf(driveMntPath, d.Name)
+	args := []string{target}
 
-	out, err := exec.Command(cmd).Output()
+	out, err := runCommand("/bin/umount", args, nil)
 	return out, err
 }
 
 // OpenDrive opens encrypted device
-func openDrive(status *DriveStatus) ([]byte, error) {
-	cmd := fmt.Sprintf("cryptsetup open /dev/disk/by-uuid/%s %s", status.Name, status.Name)
-	subprocess := exec.Command(cmd)
-
-	writer, err := subprocess.StdinPipe()
-	if err != nil {
-		return []byte(""), err
-	}
-
-	_, err = writer.Write([]byte(status.Password + "\n"))
-	if err != nil {
-		return []byte(""), err
-	}
-
-	out, err := subprocess.Output()
+func (d *DriveStatus) OpenDrive(password string) ([]byte, error) {
+	args := []string{"open", "/dev/disk/by-uuid/" + d.UUID, d.Name}
+	out, err := runCommand("/sbin/cryptsetup", args, []byte(password+"\n"))
 	return out, err
 }
 
 // CloseDrive closes encrypted device
-func CloseDrive(status *DriveStatus) ([]byte, error) {
-	src := fmt.Sprintf(driveMapperPath, status.Name)
-	cmd := fmt.Sprintf("cryptsetup close %s", src)
+func (d *DriveStatus) CloseDrive() ([]byte, error) {
+	src := fmt.Sprintf(driveMapperPath, d.Name)
+	args := []string{"close", src}
 
-	out, err := exec.Command(cmd).Output()
+	out, err := runCommand("/sbin/cryptsetup", args, nil)
 	return out, err
 }
