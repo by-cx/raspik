@@ -13,6 +13,7 @@ remote:
 
 sync: build
 	rsync -av --exclude .git/ --exclude config.yml --exclude .history/ --exclude .vscode/ ./ pi@192.168.1.2:/home/pi/raspirack/
+	ssh pi@192.168.1.2 sudo cp /home/pi/raspirack/api_arm /usr/local/bin/raspirack
 
 build:
 	go build -o api src/main/*.go

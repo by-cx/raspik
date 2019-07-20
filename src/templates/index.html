@@ -32,56 +32,82 @@
     </nav>
     </header>
 
-    <div class="container">
+    <div class="container" id="raspirack">
             
         <!-- Panel: Initialization -->
-        <div class="row" id="init-drives">
+        <div class="row">
             <div class="col-md-12" v-if="!drivesReady()">
                 <h2>Your NAS needs the encryption password(s)</h2>
                 <p>To finish the NAS initialization your NAS needs encryption pass-phrases (passwords) to unlock the encrypted drives. This is security messure so nobody can see your data after the power is lost.</p>
 
-                <form>
+                <form v-if="!working">
                     <div class="form-group" v-for="(drive, index) in drives_not_ready">
-                        <label for="exampleInputEmail1">Password for <strong>[[ drive.name ]]</strong> drive</label>
-                        <input type="password" class="form-control" aria-describedby="emailHelp" :placeholder="'password for ' + drive.name" v-model="drives_not_ready[index].password">
+                        <!-- Only not ready drives are set so this can't be shown yet.
+                        <div class="alert alert-secondary" role="alert" v-if="drive.mounted">
+                            Drive <strong>[[ drive.name ]]</strong> is ready to use.
+                        </div>
+                        <div class="alert alert-secondary" role="alert" v-if="! drive.mounted && ! drive.encrypted">
+                            Drive <strong>[[ drive.name ]]</strong> is not mounted.
+                        </div>
+                        -->
+                        <!-- <div v-if="drive.encrypted && ! drive.opened"> -->
+                        <div>
+                            <label for="exampleInputEmail1">Password for <strong>[[ drive.name ]]</strong> drive</label>
+                            <input type="password" class="form-control" aria-describedby="emailHelp" :placeholder="'password for ' + drive.name" v-model="drives_not_ready[index].password">
+                        </div>
                     </div>
                     <button type="button" v-on:click="unlockDrives" class="btn btn-primary">Mount the drives</button>
-                    <p class="error">[[ message ]]</p>
-
-                    <div class="alert alert-danger" role="alert" v-if="message.length > 0">
-                        [[ message ]]
-                    </div>
-
                 </form>
+
+                <div class="alert alert-danger" role="alert" v-if="message.length > 0 && !working">
+                    [[ message ]]
+                </div>
+                <div class="alert alert-primary" role="alert" v-if="working">
+                    Working ....
+                </div>
             </div>
             <div class="col-md-12" v-if="drivesReady()">
                 <h2>Your NAS is ready to use</h2>
             </div>
         </div>
         <!-- End Panel: Initialization -->
-            
-        <div class="row"></div>
+
+        <div class="row" v-if="drivesReady()">
             <!-- Panel: Users -->
-            <!-- <div class="col-md-5">
-                <table class="table table-hover table-dark">
-                <thead>
-                    <tr>
-                        <th scope="col" colspan="2">Cx</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th scope="row">Username</th>
-                        <td>cx</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Syncthing</th>
-                        <td>Enabled</td>
-                    </tr>
-                </tbody>
-                </table>
-            </div> -->
+            <div class="col-md-6">
+                <div class="card" v-for="user in users">
+                    <div class="card-body">
+                        <h5 class="card-title">User [[ user.name ]]</h5>
+                        <p class="card-text">
+                            <strong>Syncthing:</strong> [[ user.services.syncthing.enabled ]]<br>
+                        </p>
+                        <a href="http://192.168.1.2:8384">Syncthing GUI</a>
+                    </div>
+                </div>
+            </div>
             <!-- End Panel: Users -->
+
+
+            <!-- Panel: Status -->
+            <div class="col-md-6" v-if="drivesReady()">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Status</h5>
+
+                        <table class="table">
+                            <tbody>
+                                <tr v-for="(value, key) in general">
+                                    <th>[[ key ]]</th>
+                                    <td>[[ value ]]</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- End Panel: Status -->
+
+
             <!-- Panel: Shares -->
             <!-- <div class="col-md-5">
                 <table class="table table-hover table-dark">
@@ -117,7 +143,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
     <script>
         var initDrives = new Vue({
-            el: '#init-drives',
+            el: '#raspirack',
             delimiters: ['[[', ']]'],
             created: function() {
                 this.loadAll()
@@ -129,12 +155,16 @@
                 shares: [],
                 general: {},
                 backup: {},
-                message: "" // error message
+                message: "", // error message
+                working: false // true if some background work is in progress
             },
             methods: {
                 loadAll() {
                     this.$http.get("/drives?not_ready=1").then(response => {
                         this.drives_not_ready = response.body
+                    })
+                    this.$http.get("/drives").then(response => {
+                        this.drives = response.body
                     })
                     this.$http.get("/users").then(response => {
                         this.users = response.body
@@ -154,6 +184,7 @@
                 },
                 unlockDrives() {
                     var passwords = []
+                    this.working = true
 
                     this.drives_not_ready.forEach(function (drive) {
                         passwords.push(drive.password)
@@ -161,10 +192,15 @@
 
                     this.$http.post("/drives/unlock", passwords).then(response => {
                         this.loadAll()
+                        this.working = false
                     }, response => {
                         console.log("Initialization failed")
                         console.log(response)
                         this.message = response.body.message
+                        this.$http.get("/drives?not_ready=1").then(response => {
+                            this.drives_not_ready = response.body
+                            this.working = false
+                        })
                     })
                 }
             }

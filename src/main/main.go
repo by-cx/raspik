@@ -155,10 +155,10 @@ func main() {
 		return c.JSONPretty(http.StatusOK, map[string]string{"message": "ok"}, "    ")
 	})
 	e.GET("/shares", func(c echo.Context) error {
-		return c.JSONPretty(http.StatusOK, config.Users, "    ")
+		return c.JSONPretty(http.StatusOK, config.Shares, "    ")
 	})
 	e.GET("/users", func(c echo.Context) error {
-		return c.JSONPretty(http.StatusOK, config.Shares, "    ")
+		return c.JSONPretty(http.StatusOK, config.Users, "    ")
 	})
 	e.GET("/general", func(c echo.Context) error {
 		return c.JSONPretty(http.StatusOK, config.General, "    ")

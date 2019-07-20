@@ -39,6 +39,19 @@
       state: present # not required. choices: absent;present. Whether the account should exist or not, taking action if the state is different from what is stated.
   with_items: "{{ users }}"
 
+# Raspirack
+
+- name: Raspirack service file
+  copy:
+      dest: /etc/systemd/system/raspirack.service
+      src: raspirack.service
+
+- name: Raspirack service
+  service:
+      name: raspirack
+      enabled: true
+      state: restarted
+
 # Docker
 
 # Doesn't work with the new Raspbian yet

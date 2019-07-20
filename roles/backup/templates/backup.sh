@@ -20,9 +20,14 @@ set -x {{ key }} "{{ value }}"
 # Initialization of the repository, don't worry about fatal error if the repo is created :-)
 /usr/local/bin/restic init
 
+# Backup homes
+{% if general.homes_backup %}
+/usr/local/bin/restic backup /mnt/{{ drives[general.homes_drive].name }}/homes/
+{% endif %}
+
 # Backup all drives
-{% for drive in drives %}
-/usr/local/bin/restic backup /mnt/{{ drive.name }}
+{% for share in shares %}
+{% if share.backup %}/usr/local/bin/restic backup /mnt/{{ drives[share.drive].name }}/{{ share.name }}{% endif %}
 {% endfor %}
 
 # Clear old data

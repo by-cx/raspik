@@ -28,3 +28,12 @@
   args:
     stdin: "{{ item.password }}\n{{ item.password }}"
   with_items: "{{ users }}"
+
+- name: directories for shares
+  file:
+      path: /mnt/{{ drives[item.drive].name }}/{{ item.name }}
+      group: "{{ general.shared_group }}"
+      state: directory
+      mode: 0770
+      owner: root
+  loop: "{{ shares }}"

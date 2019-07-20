@@ -2,6 +2,7 @@
 general:
   samba_home_directories: true
   homes_drive: 0 # Index of drive where user's private shares are created
+  homes_backup: true
   shared_group: shared
 
 # Backup configuration
@@ -42,5 +43,7 @@ drives:
 shares:
   - name: photos 
     drive: 0 # Index of drive where this share is located
+    backup: true
   - name: data
     drive: 0
+    backup: true
