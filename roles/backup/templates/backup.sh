@@ -27,7 +27,8 @@ set -x {{ key }} "{{ value }}"
 
 # Backup all drives
 {% for share in shares %}
-{% if share.backup %}/usr/local/bin/restic backup /mnt/{{ drives[share.drive].name }}/{{ share.name }}{% endif %}
+{% if share.backup %}/usr/local/bin/restic backup /mnt/{{ drives[share.drive].name }}/{{ share.name }}
+{% endif %}
 {% endfor %}
 
 # Clear old data
