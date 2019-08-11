@@ -32,6 +32,14 @@ Dimensions of the case:
 
 Cooling is handled by a fan 92×92 mm. It can be attached at the back of front of the case. Except this front/back part there is one big and one small part. You can use them to cover front/back panels exactly like you want. The 92×92 mm fans are usually 12 V but they work perfectly on 5 V too. Raspberry Pi doesn't need anything extra. Slowly moving air is enough even in during the summer.
 
+Needed screws:
+
+* 7× 3x8mm+ (power source top cover and EU socket)
+* 2× 3x6 mm (power supply mount)
+* ~20× 3x16mm+ (front and back panel)
+
+The case is not picky. Except the two power supply screws every other screw is minimal lenght.
+
 ## Blades
 
 I use multiple Raspberry Pis so having more than one of them in one case is added value I couldn't miss while I was working on the case. RPis are pretty sensitive about power supply and I needed two 2.5" SSD and 433 MHz antenna inside. Handle all of it inside one box made smile on my face :-) Let's check each blade. Standard server racks were great inspiration for me so the this case looks like one of them.
@@ -40,15 +48,21 @@ I use multiple Raspberry Pis so having more than one of them in one case is adde
 
 I use switching power supply [MEAN WELL LRS-75-5](http://www.mean-well.cz/assets/data/LRS-75-spec.pdf). It's sold here in Czech Republic. It delivers max. 14 A in 5 V. The maximal current is much bigger than I need or I will need. On the other hand if you decide to fill all 8 slots with RPis this power source can handle it. If I am choosing the power supply now I would pick something with 5 V and 12 V output. That allows to supply 3.5" HDD. Unfortunately 3.5" HDD barely fits inside the rack.
 
-I lost source code for this blade and only I have is STL. I will add the source code once I decide to redesign it.
+** IMPORTANT: Please print both parts of the power supply blade including the top cover. You will be touching the rack and you don't want to touch the live wire. **
 
 This blade requires two slots inside the case.
+
+** IMPORTANT: I experienced instabilities in Raspberry Pi when filtering capacitor wasn't connected at the output of the power supply. Please add something like 330uF capacitor at the output. **
+
+If you decide, like me, to supply one or more USB devices directly from the power supply and power line into Raspberry Pi won't be disconnected. It's a good idea to add a poly-fuse, cut the 5V line before the USB connector or both,
+
+Also output of the power supply should be covered with 10 or 15 A fuse. I use 10 A. The selected power supply has integrated protection mechanisms but the datasheet doesn't mention short circuit protection specifically. Only Hiccup mode I have no experience with.
 
 ### Switch blade
 
 I would say this blade is optional. You can depend on WiFi or having the switch somewhere else. I use Tenda TEG1005D. It's super small, 1 Gbit switch that fits inside perfectly. The switch is glued to the blade.
 
-As the power supply blade this one also requires two slots. I am planning to squeeze them together so they need only three slots in total.
+As the power supply blade this one also requires two slots. I am planning to squeeze them together so they will need only three slots in total but I have plenty of space available for now.
 
 ### 2.5" HDD/SSD blade
 
