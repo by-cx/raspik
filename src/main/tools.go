@@ -16,8 +16,7 @@ func runCommand(cmd string, args []string, stdin []byte) ([]byte, error) {
 		}
 	}
 
-	out, err := subprocess.Output()
-	return out, err
+	return subprocess.Output()
 }
 
 func startService(name string) error {
