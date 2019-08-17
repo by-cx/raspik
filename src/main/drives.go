@@ -67,8 +67,8 @@ func (d *DriveStatus) MountDrive() ([]byte, error) {
 	src := fmt.Sprintf(driveMapperPath, d.Name)
 	target := fmt.Sprintf(driveMntPath, d.Name)
 	args := []string{src, target}
-	out, err := runCommand("/bin/mount", args, nil)
-	return out, err
+
+	return runCommand("/bin/mount", args, nil)
 }
 
 // UmountDrive umounts drive defined in status variables
@@ -76,15 +76,14 @@ func (d *DriveStatus) UmountDrive() ([]byte, error) {
 	target := fmt.Sprintf(driveMntPath, d.Name)
 	args := []string{target}
 
-	out, err := runCommand("/bin/umount", args, nil)
-	return out, err
+	return runCommand("/bin/umount", args, nil)
 }
 
 // OpenDrive opens encrypted device
 func (d *DriveStatus) OpenDrive(password string) ([]byte, error) {
 	args := []string{"open", "/dev/disk/by-uuid/" + d.UUID, d.Name}
-	out, err := runCommand("/sbin/cryptsetup", args, []byte(password+"\n"))
-	return out, err
+
+	return runCommand("/sbin/cryptsetup", args, []byte(password+"\n"))
 }
 
 // CloseDrive closes encrypted device
@@ -92,6 +91,5 @@ func (d *DriveStatus) CloseDrive() ([]byte, error) {
 	src := fmt.Sprintf(driveMapperPath, d.Name)
 	args := []string{"close", src}
 
-	out, err := runCommand("/sbin/cryptsetup", args, nil)
-	return out, err
+	return runCommand("/sbin/cryptsetup", args, nil)
 }
