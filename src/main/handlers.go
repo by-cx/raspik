@@ -7,11 +7,11 @@ import (
 	"github.com/labstack/echo"
 )
 
-func index(c echo.Context) error {
-	return c.Render(http.StatusOK, "index.html", "")
+func indexHandler(c echo.Context) error {
+	return c.Render(http.StatusOK, "indexHandler.html", "")
 }
 
-func getDrives(c echo.Context) error {
+func getDrivesHandler(c echo.Context) error {
 	notReadyFilter := false
 	if c.QueryParam("not_ready") == "1" {
 		notReadyFilter = true
@@ -33,7 +33,7 @@ func getDrives(c echo.Context) error {
 	return c.JSONPretty(http.StatusOK, driveStatuses, "    ")
 }
 
-func postDrivesUnlock(c echo.Context) error {
+func postDrivesUnlockHandler(c echo.Context) error {
 	var passwords []string
 
 	err := c.Bind(&passwords)
@@ -112,18 +112,18 @@ func postDrivesUnlock(c echo.Context) error {
 	return c.JSONPretty(http.StatusOK, map[string]string{"message": "ok"}, "    ")
 }
 
-func shares(c echo.Context) error {
+func sharesHandler(c echo.Context) error {
 	return c.JSONPretty(http.StatusOK, config.Shares, "    ")
 }
 
-func users(c echo.Context) error {
+func usersHandler(c echo.Context) error {
 	return c.JSONPretty(http.StatusOK, config.Users, "    ")
 }
 
-func general(c echo.Context) error {
+func generalHandler(c echo.Context) error {
 	return c.JSONPretty(http.StatusOK, config.General, "    ")
 }
 
-func backup(c echo.Context) error {
+func backupHandler(c echo.Context) error {
 	return c.JSONPretty(http.StatusOK, config.Backup, "    ")
 }

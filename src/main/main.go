@@ -63,13 +63,13 @@ func main() {
 	}))
 	e.Use(middleware.Logger())
 
-	e.GET("/", index)
-	e.GET("/drives", getDrives)
-	e.POST("/drives/unlock", postDrivesUnlock)
-	e.GET("/shares", shares)
-	e.GET("/users", users)
-	e.GET("/general", general)
-	e.GET("/backup", backup)
+	e.GET("/", indexHandler)
+	e.GET("/drives", getDrivesHandler)
+	e.POST("/drives/unlock", postDrivesUnlockHandler)
+	e.GET("/sharesHandler", sharesHandler)
+	e.GET("/usersHandler", usersHandler)
+	e.GET("/generalHandler", generalHandler)
+	e.GET("/backupHandler", backupHandler)
 
 	// e.GET("/", func(c echo.Context) error {
 	// 	return c.String(http.StatusOK, "Hello, World!")
