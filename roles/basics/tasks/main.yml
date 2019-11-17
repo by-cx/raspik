@@ -16,6 +16,7 @@
       - curl
       - gnupg2
       - software-properties-common
+      - hdparm
     state: present
     update_cache: yes
   environment:

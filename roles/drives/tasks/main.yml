@@ -1,5 +1,19 @@
 ---
 
+- name: APM service
+  copy:
+      dest: /etc/systemd/system/apm@.service
+      src: apm@.service
+
+- name: Setup APM service
+  systemd:
+      no_block: yes
+      name: apm@{{ item.uuid }} # not required. Name of the service. When using in a chroot environment you always need to specify the full name i.e. (crond.service).
+      enabled: yes
+      daemon_reload: yes # not required. run daemon-reload before doing any other operations, to make sure systemd has read any changes.
+      state: started # not required. choices: reloaded;restarted;started;stopped. C(started)/C(stopped) are idempotent actions that will not run commands unless necessary. C(restarted) will always bounce the service. C(reloaded) will always reload.
+  with_items: "{{ drives }}"
+
 - name: Setup up encrypted drives
   shell: echo "{{ ENCRYPTION_PASSWORD }}" | cryptsetup open /dev/disk/by-uuid/{{ item.uuid }} {{ item.name }}
   tags:

@@ -52,7 +52,7 @@ I use switching power supply [MEAN WELL LRS-75-5](http://www.mean-well.cz/assets
 
 This blade requires two slots inside the case.
 
-** IMPORTANT: I experienced instabilities in Raspberry Pi when filtering capacitor wasn't connected at the output of the power supply. Please add something like 330uF capacitor at the output. **
+** IMPORTANT: I experienced instabilities in Raspberry Pi when filtering capacitor wasn't connected at the output of the power supply. Add something like 330uF capacitor at the output if you want to avoid that. **
 
 If you decide, like me, to supply one or more USB devices directly from the power supply and power line into Raspberry Pi won't be disconnected. It's a good idea to add a poly-fuse, cut the 5V line before the USB connector or both,
 
