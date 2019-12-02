@@ -2,3 +2,4 @@ config.yml
 *.retry
 .history/
 .vscode/
+vendor/

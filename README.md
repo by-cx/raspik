@@ -1,6 +1,6 @@
 # RaspiRack
 
-Goal of this project is to deliver home made NAS from scratch. The hardware part is based on Raspberry Pi 4 and 3D printed case very similar to a server's racks. The software part is based on Ansible and vanilla Raspbian. It's still in alpha stage of development and I am quite sure it remains there for some time.
+Goal of this project is to deliver home made NAS from scratch. The hardware part is based on Raspberry Pi 4 and 3D printed case very similar to server's racks. The software part is based on Ansible and vanilla Raspbian. It's still in alpha stage of development and I am quite sure it remains there for some time.
 
 I am happy user of Synology NAS and my DS216play has been in use for a few year now. It's pretty neat piece of hardware but it's not perfect. Encryption is slow and can't be used for photos managed by Synology's PhotoStation. Also the interface became slow after the years and a lot of updates that I started using only fraction of its capabilities. They are Samba shares, backup and SynologyDrive. Time of replacing this device is coming so I decided to explore possibilities of building it myself. Raspberry Pi 4 is out. Its encryption capabilities are not the best but also not the worst and it supports USB 3 devices. The only missing piece is the case and software that would make managing my data easy again.
 

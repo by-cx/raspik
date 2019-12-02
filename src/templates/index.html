@@ -1,210 +1,55 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<html class="no-js" lang="en" dir="ltr">
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users | RaspiRack NAS interface</title>
+  <link rel="stylesheet" href="/static/css/foundation.css">
+  <link rel="stylesheet" href="/static/css/app.css">
+  <link rel="stylesheet" href="/static/foundation-icons/foundation-icons.css">
+</head>
 
-    <title>RaspiRack admin</title>
+<body>
 
-    <style>
-        .navbar { margin-bottom: 20px !important; }
-    </style>
-  </head>
-  <body>
-    <header>
-    <!-- Fixed navbar -->
-    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
-        <a class="navbar-brand" href="#">RaspiRack</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarCollapse">
-        <ul class="navbar-nav mr-auto">
-            <!-- <li class="nav-item active">
-            <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-            </li>-->
-        </ul>
-        </div>
+  <div class="row columns">
+    <nav class="hover-underline-menu" data-menu-underline-from-center>
+      <ul class="menu align-center">
+        {{ if eq . "unlock" }}
+          <li {{ if eq . "unlock" }}class="is-active"{{ end }}><a href="/">Unlock</a></li>
+        {{ else }}
+          <li {{ if eq . "users" }}class="is-active"{{ end }}><a href="/">Users</a></li>
+          <li {{ if eq . "volumes" }}class="is-active"{{ end }}><a href="#">Volumes</a></li>
+          <li {{ if eq . "drives" }}class="is-active"{{ end }}><a href="#">Drives</a></li>
+          <li {{ if eq . "services" }}class="is-active"{{ end }}><a href="#">Services</a></li>
+          <li {{ if eq . "settings" }}class="is-active"{{ end }}><a href="#">Settings</a></li>
+          <li {{ if eq . "config" }}class="is-active"{{ end }}><a href="/config">Config</a></li>
+        {{ end }}
+      </ul>
     </nav>
-    </header>
+  </div>
 
-    <div class="container" id="raspirack">
-            
-        <!-- Panel: Initialization -->
-        <div class="row">
-            <div class="col-md-12" v-if="!drivesReady()">
-                <h2>Your NAS needs the encryption password(s)</h2>
-                <p>To finish the NAS initialization your NAS needs encryption pass-phrases (passwords) to unlock the encrypted drives. This is security messure so nobody can see your data after the power is lost.</p>
-
-                <form v-if="!working">
-                    <div class="form-group" v-for="(drive, index) in drives_not_ready">
-                        <!-- Only not ready drives are set so this can't be shown yet.
-                        <div class="alert alert-secondary" role="alert" v-if="drive.mounted">
-                            Drive <strong>[[ drive.name ]]</strong> is ready to use.
-                        </div>
-                        <div class="alert alert-secondary" role="alert" v-if="! drive.mounted && ! drive.encrypted">
-                            Drive <strong>[[ drive.name ]]</strong> is not mounted.
-                        </div>
-                        -->
-                        <!-- <div v-if="drive.encrypted && ! drive.opened"> -->
-                        <div>
-                            <label for="exampleInputEmail1">Password for <strong>[[ drive.name ]]</strong> drive</label>
-                            <input type="password" class="form-control" aria-describedby="emailHelp" :placeholder="'password for ' + drive.name" v-model="drives_not_ready[index].password">
-                        </div>
-                    </div>
-                    <button type="button" v-on:click="unlockDrives" class="btn btn-primary">Mount the drives</button>
-                </form>
-
-                <div class="alert alert-danger" role="alert" v-if="message.length > 0 && !working">
-                    [[ message ]]
-                </div>
-                <div class="alert alert-primary" role="alert" v-if="working">
-                    Working ....
-                </div>
-            </div>
-            <div class="col-md-12" v-if="drivesReady()">
-                <h2>Your NAS is ready to use</h2>
-            </div>
-        </div>
-        <!-- End Panel: Initialization -->
-
-        <div class="row" v-if="drivesReady()">
-            <!-- Panel: Users -->
-            <div class="col-md-6">
-                <div class="card" v-for="user in users">
-                    <div class="card-body">
-                        <h5 class="card-title">User [[ user.name ]]</h5>
-                        <p class="card-text">
-                            <strong>Syncthing:</strong> [[ user.services.syncthing.enabled ]]<br>
-                        </p>
-                        <a href="http://192.168.1.2:8384">Syncthing GUI</a>
-                    </div>
-                </div>
-            </div>
-            <!-- End Panel: Users -->
-
-
-            <!-- Panel: Status -->
-            <div class="col-md-6" v-if="drivesReady()">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Status</h5>
-
-                        <table class="table">
-                            <tbody>
-                                <tr v-for="(value, key) in general">
-                                    <th>[[ key ]]</th>
-                                    <td>[[ value ]]</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <!-- End Panel: Status -->
-
-
-            <!-- Panel: Shares -->
-            <!-- <div class="col-md-5">
-                <table class="table table-hover table-dark">
-                <thead>
-                    <tr>
-                        <th scope="col" colspan="2">Photos</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th scope="row">Share name</th>
-                        <td>photos</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Drive</th>
-                        <td>0</td>
-                    </tr>
-                </tbody>
-                </table>
-            </div> -->
-            <!-- End Panel: Shares -->
-        </div>
+  <div class="grid-container">
+    <div class="grid-x grid-padding-x">
+      <div class="large-12 cell">
+      {{ if eq . "users" }}
+        {{ template "users" . }}
+      {{ end }}
+      {{ if eq . "config" }}
+        {{ template "config" . }}
+      {{ end }}
+      {{ if eq . "unlock" }}
+        
+      {{ end }}
+      </div>
     </div>
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <!-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script> -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-    
-    <!-- development version, includes helpful console warnings -->
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
-    <script>
-        var initDrives = new Vue({
-            el: '#raspirack',
-            delimiters: ['[[', ']]'],
-            created: function() {
-                this.loadAll()
-            },
-            data: {
-                drives_not_ready: [],
-                drives: [],
-                users: [],
-                shares: [],
-                general: {},
-                backup: {},
-                message: "", // error message
-                working: false // true if some background work is in progress
-            },
-            methods: {
-                loadAll() {
-                    this.$http.get("/drives?not_ready=1").then(response => {
-                        this.drives_not_ready = response.body
-                    })
-                    this.$http.get("/drives").then(response => {
-                        this.drives = response.body
-                    })
-                    this.$http.get("/users").then(response => {
-                        this.users = response.body
-                    })
-                    this.$http.get("/shares").then(response => {
-                        this.shares = response.body
-                    })
-                    this.$http.get("/general").then(response => {
-                        this.general = response.body
-                    })
-                    this.$http.get("/backup").then(response => {
-                        this.backup = response.body
-                    })
-                },
-                drivesReady() {
-                    return this.drives_not_ready.length == 0
-                },
-                unlockDrives() {
-                    var passwords = []
-                    this.working = true
+  </div>
 
-                    this.drives_not_ready.forEach(function (drive) {
-                        passwords.push(drive.password)
-                    })
+  <script src="/static/js/vendor/jquery.js"></script>
+  <script src="/static/js/vendor/what-input.js"></script>
+  <script src="/static/js/vendor/foundation.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
 
-                    this.$http.post("/drives/unlock", passwords).then(response => {
-                        this.loadAll()
-                        this.working = false
-                    }, response => {
-                        console.log("Initialization failed")
-                        console.log(response)
-                        this.message = response.body.message
-                        this.$http.get("/drives?not_ready=1").then(response => {
-                            this.drives_not_ready = response.body
-                            this.working = false
-                        })
-                    })
-                }
-            }
-        })
-    </script>
-  </body>
 </html>

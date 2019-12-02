@@ -1,0 +1,59 @@
+<!doctype html>
+<html class="no-js" lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Config | RaspiRack NAS interface</title>
+  <link rel="stylesheet" href="/static/css/foundation.css">
+  <link rel="stylesheet" href="/static/css/app.css">
+  <link rel="stylesheet" href="/static/foundation-icons/foundation-icons.css">
+  <style>
+    #editor { 
+      width: 100%;
+      height: 500px;
+    }
+    .grid-container {
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="row columns">
+    <nav class="hover-underline-menu" data-menu-underline-from-center>
+      <ul class="menu align-center">
+        <li><a href="/index.html">Users</a></li>
+        <li><a href="#">Volumes</a></li>
+        <li><a href="#">Drives</a></li>
+        <li><a href="#">Services</a></li>
+        <li><a href="#">Settings</a></li>
+        <li class="is-active"><a href="/config.html">Config</a></li>
+      </ul>
+    </nav>
+  </div>
+  <div class="grid-container">
+    <div class="grid-x grid-padding-x">
+      <div class="large-12 cell">
+        <button class="button">Apply</button>
+        <div id="editor"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- <script src="/static/js/vendor/jquery.js"></script>
+  <script src="/static/js/vendor/what-input.js"></script>
+  <script src="/static/js/vendor/foundation.js"></script> -->
+  <!-- <script src="/static/js/app.js"></script> -->
+  <script src="/static/ace-builds-1.4.7/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script>
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.session.setMode("ace/mode/yaml");
+    editor.resize()
+  </script>
+</body>
+
+</html>
