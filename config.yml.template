@@ -38,6 +38,10 @@ drives:
   - name: ssd500
     uuid: 0618649e-380b-4048-bc78-6533af378cf6
     encrypted: true
+    raid_devices:
+      - b05a8ce2-d725-4336-a619-3d78a3eab246
+      - f8057657-7854-42a8-94d9-6d0a07e089b8
+    keepalive: true
 
 # Samba shares
 shares:

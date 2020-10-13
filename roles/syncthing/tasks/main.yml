@@ -29,7 +29,7 @@
       regexp: "^ExecStart="
       line: "ExecStart=/usr/local/bin/syncthing -no-browser -no-restart -logflags=0"
 
-- name: Enable syncthing services
+- name: Disable syncthing services
   systemd:
       name: syncthing@{{ item.name }}
       enabled: no # Syncthing can't start automatically because mounting encrypted volumes is manual job

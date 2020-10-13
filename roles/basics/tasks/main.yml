@@ -76,3 +76,24 @@
 #     - docker-ce
 #     - docker-ce-cli
 #     - containerd.io
+
+
+
+# Prevents HDD from spin-down for drives that forces it regardless configuration via hdparm.
+
+- name: HDD keep alive file
+  lineinfile:
+    path: /mnt/{{ item.name }}/.keepalive
+    line: "Keep-alive file that is read every few minutes to prevent HDD from sleeping."
+  loop: "{{ drives }}"
+
+- name: HDD keep alive cron  
+  cron:
+    job: /mnt/{{ item.name }}/.keepalive
+    name: "hdd keepalive of {{ item.name }}"
+    hour: "*"
+    minute: "*"
+    day: "*"
+    month: "*"
+    weekday: "*"
+  loop: "{{ drives }}"
