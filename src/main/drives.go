@@ -285,6 +285,16 @@ func GetDriveStatus(driveIndex uint) (*DriveStatus, error) {
 		}
 	}
 
+	// Check for file system errors
+	if status.Health != "OK" {
+		for _, fsError := range status.FilesystemErrors {
+			if fsError.Total() > 0 {
+				status.Health = "filesystem errors detected"
+				break
+			}
+		}
+	}
+
 	return &status, nil
 }
 

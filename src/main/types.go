@@ -70,3 +70,8 @@ type FileSystemErrors struct {
 	CorruptionErrors int `json:"corruption_errs"`
 	GenerationErrsor int `json:"generation_errs"`
 }
+
+// Total return sum of all errors
+func (f *FileSystemErrors) Total() int {
+	return f.WriteIOErrors + f.ReadIOErrors + f.FlushIOErrors + f.CorruptionErrors + f.GenerationErrsor
+}
