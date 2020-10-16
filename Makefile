@@ -18,3 +18,9 @@ sync: build
 build:
 	go build -o api src/main/*.go
 	env GOOS=linux GOARCH=arm GOARM=5 go build -o api_arm src/main/*.go
+
+deploy: build
+	scp api_arm root@raspik.local:/home/pi/raspirack/api_arm.tmp
+	ssh root@raspik.local mv /home/pi/raspirack/api_arm.tmp /home/pi/raspirack/api_arm
+	scp src/templates/index.html root@raspik.local:/home/pi/raspirack/src/templates/
+	ssh root@raspik.local systemctl restart raspirack

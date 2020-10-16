@@ -66,6 +66,17 @@ func main() {
 	e.GET("/", func(c echo.Context) error {
 		return c.Render(http.StatusOK, "index.html", "")
 	})
+	e.GET("/device/status", func(c echo.Context) error {
+		rpi := RPi{}
+		cpuTemperature, err := rpi.CPUTemperature()
+		if err != nil {
+			return c.String(http.StatusInternalServerError, err.Error())
+		}
+
+		return c.JSONPretty(http.StatusInternalServerError, DeviceStatus{
+			CPUTemperature: cpuTemperature,
+		}, jsonIdent)
+	})
 	e.GET("/drives", func(c echo.Context) error {
 		notReadyFilter := false
 		if c.QueryParam("not_ready") == "1" {
@@ -77,7 +88,7 @@ func main() {
 		for drive := range config.Drives {
 			status, err := GetDriveStatus(uint(drive))
 			if err != nil {
-				return echo.NewHTTPError(http.StatusBadGateway, err.Error())
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 			}
 
 			if (notReadyFilter && !status.IsReady()) || !notReadyFilter {
@@ -85,19 +96,20 @@ func main() {
 			}
 		}
 
-		return c.JSONPretty(http.StatusOK, driveStatuses, "    ")
+		return c.JSONPretty(http.StatusOK, driveStatuses, jsonIdent)
 	})
 	e.POST("/drives/unlock", func(c echo.Context) error {
-		var passwords []string
-
-		err := c.Bind(&passwords)
-		if err != nil {
+		passwordRaw, err := ioutil.ReadAll(c.Request().Body)
+		if err != nil && err.Error() != "EOF" {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
+
+		password := string(passwordRaw)
 
 		// Load drives status
 		var driveStatuses = []DriveStatus{}
 
+		// Read status of all drives
 		for idx, drive := range config.Drives {
 			status, err := GetDriveStatus(uint(idx))
 			if err != nil {
@@ -108,14 +120,10 @@ func main() {
 			}
 		}
 
-		if len(driveStatuses) != len(passwords) {
-			return echo.NewHTTPError(http.StatusBadRequest, "Number of password doesn't match number of drives")
-		}
-
-		for idx, drive := range driveStatuses {
-
+		// Open the ones that are not openned and mount them
+		for _, drive := range driveStatuses {
 			if drive.Encrypted && !drive.Opened {
-				_, err := drive.OpenDrive(passwords[idx])
+				_, err := drive.OpenDrive(password)
 				if err != nil {
 					return echo.NewHTTPError(http.StatusBadGateway, "Error while opening "+drive.Name+" | "+err.Error()+" | Is your password correct?")
 				}
@@ -141,6 +149,7 @@ func main() {
 			}
 		}
 
+		// Start Syncthing
 		if ready {
 			for _, user := range config.Users {
 				if user.Services.Syncthing.Enabled {

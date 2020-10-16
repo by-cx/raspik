@@ -1,8 +1,14 @@
 package main
 
-import "os/exec"
+import (
+	"log"
+	"os/exec"
+	"strings"
+)
 
 func runCommand(cmd string, args []string, stdin []byte) ([]byte, error) {
+	log.Println("Command:", cmd, strings.Join(args, " "))
+
 	subprocess := exec.Command(cmd, args...)
 
 	if stdin != nil {

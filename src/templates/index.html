@@ -8,7 +8,7 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
-    <title>RaspiRack admin</title>
+    <title>Raspik</title>
 
     <style>
         .navbar { margin-bottom: 20px !important; }
@@ -37,11 +37,11 @@
         <!-- Panel: Initialization -->
         <div class="row">
             <div class="col-md-12" v-if="!drivesReady()">
-                <h2>Your NAS needs the encryption password(s)</h2>
-                <p>To finish the NAS initialization your NAS needs encryption pass-phrases (passwords) to unlock the encrypted drives. This is security messure so nobody can see your data after the power is lost.</p>
+                <h2>Your NAS needs to be unlocked</h2>
+                <p>To finish the NAS booting up process it needs a pass-phrase (password) to unlock the encrypted drives. This is security messure so nobody can see your data after the power is lost.</p>
 
                 <form v-if="!working">
-                    <div class="form-group" v-for="(drive, index) in drives_not_ready">
+                    <div class="form-group" v-if="drives_not_ready.length > 0">
                         <!-- Only not ready drives are set so this can't be shown yet.
                         <div class="alert alert-secondary" role="alert" v-if="drive.mounted">
                             Drive <strong>[[ drive.name ]]</strong> is ready to use.
@@ -52,11 +52,11 @@
                         -->
                         <!-- <div v-if="drive.encrypted && ! drive.opened"> -->
                         <div>
-                            <label for="exampleInputEmail1">Password for <strong>[[ drive.name ]]</strong> drive</label>
-                            <input type="password" class="form-control" aria-describedby="emailHelp" :placeholder="'password for ' + drive.name" v-model="drives_not_ready[index].password">
+                            <label for="exampleInputEmail1">Password for your encrypted drives</label>
+                            <input name="password" type="password" class="form-control" aria-describedby="emailHelp" :placeholder="password" v-model="password">
                         </div>
                     </div>
-                    <button type="button" v-on:click="unlockDrives" class="btn btn-primary">Mount the drives</button>
+                    <button type="button" v-on:click="unlockDrives" class="btn btn-primary">Mount all encrypted drives</button>
                 </form>
 
                 <div class="alert alert-danger" role="alert" v-if="message.length > 0 && !working">
@@ -97,6 +97,10 @@
                         <table class="table">
                             <tbody>
                                 <tr v-for="(value, key) in general">
+                                    <th>[[ key ]]</th>
+                                    <td>[[ value ]]</td>
+                                </tr>
+                                <tr v-for="(value, key) in device_status">
                                     <th>[[ key ]]</th>
                                     <td>[[ value ]]</td>
                                 </tr>
@@ -155,8 +159,10 @@
                 shares: [],
                 general: {},
                 backup: {},
+                device_status: {},
                 message: "", // error message
-                working: false // true if some background work is in progress
+                working: false, // true if some background work is in progress
+                password: "", // password for unlocking the drives
             },
             methods: {
                 loadAll() {
@@ -178,19 +184,17 @@
                     this.$http.get("/backup").then(response => {
                         this.backup = response.body
                     })
+                    this.$http.get("/device/status").then(response => {
+                        this.device_status = response.body
+                    })
                 },
                 drivesReady() {
                     return this.drives_not_ready.length == 0
                 },
                 unlockDrives() {
-                    var passwords = []
                     this.working = true
 
-                    this.drives_not_ready.forEach(function (drive) {
-                        passwords.push(drive.password)
-                    })
-
-                    this.$http.post("/drives/unlock", passwords).then(response => {
+                    this.$http.post("/drives/unlock", this.password).then(response => {
                         this.loadAll()
                         this.working = false
                     }, response => {

@@ -1,5 +1,7 @@
 package main
 
+const jsonIdent = "  "
+
 // Config represents configuration of the NAS environment
 type Config struct {
 	General struct {
@@ -27,13 +29,44 @@ type Config struct {
 	}
 
 	Drives []struct {
-		Name      string `yaml:"name" json:"name"`
-		UUID      string `yaml:"uuid" json:"uuid"`
-		Encrypted bool   `yaml:"encrypted" json:"encrypted"`
+		Name        string   `yaml:"name" json:"name"`
+		UUID        string   `yaml:"uuid" json:"uuid"`
+		Encrypted   bool     `yaml:"encrypted" json:"encrypted"`
+		Raid        bool     `yaml:"raid" json:"raid"` // Only Btrfs raid is supported
+		RaidDevices []string `yaml:"raid_devices" json:"raid_devices"`
 	} `yaml:"drives" json:"drives"`
 
 	Shares []struct {
 		Name  string `yaml:"name" json:"name"`
 		Drive uint   `yaml:"drive" json:"drive"`
 	} `yaml:"shares" json:"shares"`
+}
+
+// DeviceStatus contains information about status of the local system
+type DeviceStatus struct {
+	CPUTemperature float64 `json:"cpu_temperature"`
+}
+
+// DrivesStatus contains data about health of all drives in the system
+type DrivesStatus struct {
+	SMARTHealth      Health           `json:"smart_health"`
+	FileSystemErrors FileSystemErrors `json:"filesystem_errors"`
+}
+
+// Health contains a few metrics about current health of one physical drive
+type Health struct {
+	Device           string `json:"device"`
+	SMARTHealth      bool   `json:"smart_health"`
+	RelocatedSectors int    `json:"relocated_sectors"`
+	PendingSectors   int    `json:"pending_sectors"`
+	Temperature      int    `json:"temperature"`
+}
+
+// FileSystemErrors contains number of errors btrfs detected
+type FileSystemErrors struct {
+	WriteIOErrors    int `json:"write_io_errs"`
+	ReadIOErrors     int `json:"read_io_errs"`
+	FlushIOErrors    int `json:"flush_io_errs"`
+	CorruptionErrors int `json:"corruption_errs"`
+	GenerationErrsor int `json:"generation_errs"`
 }
