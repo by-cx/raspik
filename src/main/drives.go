@@ -167,16 +167,25 @@ func (d *DriveStatus) ReadFsErrors() ([]FileSystemErrors, error) {
 	// It's also first field in output of btrfs device stats.
 	source := ""
 	var fsErrors FileSystemErrors
+	output = bytes.TrimSpace(output)
 	lines := strings.Split(string(output), "\n")
 	for idx, line := range lines {
 		fields := strings.Fields(line)
-		if len(fields) == 0 {
-			continue
-		}
-		if len(fields) < 2 {
-			fmt.Println(fields)
+
+		if len(fields) != 2 {
 			return fileSystemErrors, errors.New("unexpected output of btrfs device stats")
 		}
+
+		parsedSource := strings.Split(fields[0], ".")
+
+		if len(parsedSource) != 2 {
+			return fileSystemErrors, errors.New("unexpected output of btrfs device stats")
+		}
+
+		if source == "" {
+			source = parsedSource[0]
+		}
+
 		value, err := strconv.Atoi(fields[1])
 		if err != nil {
 			return fileSystemErrors, err
@@ -194,16 +203,16 @@ func (d *DriveStatus) ReadFsErrors() ([]FileSystemErrors, error) {
 			fsErrors.GenerationErrsor += value
 		}
 
-		if (fields[0] != source && source != "") || len(lines) == idx+1 {
+		if parsedSource[0] != source || len(lines) == idx+1 {
+			fileSystemErrors = append(fileSystemErrors, fsErrors)
+
 			fsErrors.WriteIOErrors = 0
 			fsErrors.ReadIOErrors = 0
 			fsErrors.FlushIOErrors = 0
 			fsErrors.CorruptionErrors = 0
 			fsErrors.GenerationErrsor = 0
 
-			source = fields[0]
-
-			fileSystemErrors = append(fileSystemErrors, fsErrors)
+			source = parsedSource[0]
 		}
 	}
 
