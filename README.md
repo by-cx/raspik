@@ -6,6 +6,8 @@ I am also user of Synology DS216play and this project is gonna replace this devi
 
 Goal of this project is simple - replace my commercial NAS with a comparable DIY solution where I can balance pros and cons in my own way. I offer this project to open source community as it is. You can use it as you wish and I will be more than happy if you build something based on stuff in this repository or send a pull request with an awesome idea.
 
+![Raspík, the NAS](https://raw.githubusercontent.com/by-cx/raspik/master/photos/home.png)
+
 ## Parts needed to build this
 
 The NAS itself, without the drives, can be build under $100. You can skip OLED display, use cheaper fans, skip dust filters, use 1 GB Raspberry Pi (which is more than enough) and use cheap SATA-USB adapters. Let's see the part list:
