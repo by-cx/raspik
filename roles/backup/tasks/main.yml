@@ -18,6 +18,11 @@
       src: backup.sh
       mode: 0755
 
+- name: backup exclude patterns
+  file:
+    path: /etc/raspirack/backup_exclude.txt
+    state: touch
+
 - name: Backup drives cronjob
   cron:
     minute: "0"

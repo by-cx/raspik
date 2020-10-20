@@ -2,3 +2,6 @@ config.yml
 *.retry
 .history/
 .vscode/
+api
+api_arm
+inventory.txt

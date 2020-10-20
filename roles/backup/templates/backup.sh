@@ -22,7 +22,7 @@ set -x {{ key }} "{{ value }}"
 
 # Backup homes
 {% if general.homes_backup %}
-/usr/local/bin/restic backup /mnt/{{ drives[general.homes_drive].name }}/homes/
+/usr/local/bin/restic backup --exclude-file /etc/raspirack/backup_exclude.txt /mnt/{{ drives[general.homes_drive].name }}/homes/
 {% endif %}
 
 # Backup all drives

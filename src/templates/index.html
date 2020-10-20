@@ -74,43 +74,76 @@
 
         <div class="row" v-if="drivesReady()">
             <!-- Panel: Users -->
-            <div class="col-md-6">
-                <div class="card" v-for="user in users">
-                    <div class="card-body">
-                        <h5 class="card-title">User [[ user.name ]]</h5>
-                        <p class="card-text">
-                            <strong>Syncthing:</strong> [[ user.services.syncthing.enabled ]]<br>
-                        </p>
-                        <a href="http://192.168.1.2:8384">Syncthing GUI</a>
-                    </div>
-                </div>
+            <div class="col-md-12">
+                <h3>Users</h3>
+                <table class="table table-striped">
+                    <thead class="thead-inverse">
+                        <tr>
+                            <th>Name</th>
+                            <th>Syncthing</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="user in users">
+                                <td scope="row">[[ user.name ]]</td>
+                                <td>
+                                    <span v-if="user.services.syncthing.enabled"><a href="http://192.168.1.2:8384">Syncthing GUI</a></span>
+                                    <span v-if="!user.services.syncthing.enabled">Not active</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                </table>
+
             </div>
             <!-- End Panel: Users -->
+        </div>
 
-
+        <div class="row" v-if="drivesReady()">
             <!-- Panel: Status -->
-            <div class="col-md-6" v-if="drivesReady()">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Status</h5>
-
-                        <table class="table">
-                            <tbody>
-                                <tr v-for="(value, key) in general">
-                                    <th>[[ key ]]</th>
-                                    <td>[[ value ]]</td>
-                                </tr>
-                                <tr v-for="(value, key) in device_status">
-                                    <th>[[ key ]]</th>
-                                    <td>[[ value ]]</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="col-md-12">
+                <h3>System configuration</h3>
+                <table class="table">
+                    <tbody>
+                        <tr v-for="(value, key) in general">
+                            <th>[[ key ]]</th>
+                            <td>[[ value ]]</td>
+                        </tr>
+                        <tr v-for="(value, key) in device_status">
+                            <th>[[ key ]]</th>
+                            <td>[[ value ]]</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <!-- End Panel: Status -->
+        </div>
 
+        <div class="row" v-if="drivesReady()">
+            <!-- Panel: Drives -->
+            <div class="col-md-12">
+                <h3>Drives</h3>
+                <table class="table table-striped">
+                    <thead class="thead-inverse">
+                        <tr>
+                            <th>Name</th>
+                            <th>Encrypted</th>
+                            <th>Opened/Mounted</th>
+                            <th>Health</th>
+                            <th>RAID</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="drive in drives">
+                                <td scope="row">[[ drive.name ]]</td>
+                                <td>[[ drive.encrypted ]]</td>
+                                <td>[[ drive.opened ]]/[[ drive.mounted ]]</td>
+                                <td>[[ drive.health ]]</td>
+                                <td>[[ drive.raid ]]</td>
+                            </tr>
+                        </tbody>
+                </table>
+            </div>
+            <!-- End Panel: Drives -->
 
             <!-- Panel: Shares -->
             <!-- <div class="col-md-5">

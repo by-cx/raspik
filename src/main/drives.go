@@ -9,6 +9,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/shirou/gopsutil/disk"
 )
 
 const driveMapperPath = "/dev/mapper/%s"
@@ -23,9 +25,14 @@ type DriveStatus struct {
 	Mounted          bool               `json:"mounted"`   // True if mounted
 	Opened           bool               `json:"opened"`    // True in case the drive is encrypted and cryptsetup open finished without any error
 	Health           string             `json:"health"`    // String with: ok (nothing wrong is happening), warning (good to look for a new one), error (replace the drive ASAP), Unknown (we don't know)
+	Failures         []string           `json:"failures"`  // Health status translated into failure messages, if empty, all is good
 	Raid             bool               `json:"raid"`
 	RaidDevices      []string           `json:"raid_devices"` // UUID of block devices where the Btrfs RAID is
 	HealthRAW        []Health           `json:"health_raw"`
+	UsedBytes        uint64             `json:"used_bytes"`
+	TotalBytes       uint64             `json:"total_bytes"`
+	ScrubRunning     bool               `json:"scrub_running"`
+	ScrubErrors      int64              `json:"scrub_errors"`
 	FilesystemErrors []FileSystemErrors `json:"filesystem_errors"`
 }
 
@@ -220,82 +227,61 @@ func (d *DriveStatus) ReadFsErrors() ([]FileSystemErrors, error) {
 
 }
 
-// GetDriveStatus returns filled DriveStatus struct where information about the drive is saved
-func GetDriveStatus(driveIndex uint) (*DriveStatus, error) {
-	var status DriveStatus
-
-	drive := config.Drives[driveIndex]
-
-	status.Name = drive.Name
-	status.UUID = drive.UUID
-	status.Encrypted = drive.Encrypted
-	status.Health = "unknown" // TODO: implement this
-	status.Raid = drive.Raid
-	status.RaidDevices = drive.RaidDevices
-
-	srcDriveName := status.Name
-	if status.Raid {
-		// In case of raid we check if the first device is opened or not.
-		// TODO: We should check all of them.
-		srcDriveName += "_0"
-	}
-
-	// Check if the drive is openned
-	if _, err := os.Stat(fmt.Sprintf(driveMapperPath, srcDriveName)); err == nil && status.Encrypted {
-		status.Opened = true
-	} else {
-		status.Opened = false
-	}
-
-	// Check if the drive is mounted
-	content, err := ioutil.ReadFile(mountsPath)
-	if err != nil {
-		return &status, err
-	}
-	mounts := bytes.Split(content, []byte("\n"))
-
-	for i := range mounts {
-		src := bytes.Split(mounts[i], []byte(" "))[0]
-		if string(src) == fmt.Sprintf(driveMapperPath, srcDriveName) {
-			status.Mounted = true
-			break
+// Df returns occupied bytes and total bytes available on this drive or error in case of trouble.
+func (d *DriveStatus) Df() (uint64, uint64, error) {
+	if d.Mounted {
+		stats, err := disk.Usage(d.GetTarget())
+		if err != nil {
+			return 0, 0, err
 		}
+
+		return stats.Used, stats.Total, nil
 	}
 
-	// Filesystem errors
-	status.FilesystemErrors, err = status.ReadFsErrors()
+	return 0, 0, nil
+}
+
+// ScrubData returns number of errors found during last round of scrubbing. Returned values
+// are true or false for running, number of errors and error if something goes wrong.
+func (d *DriveStatus) ScrubData() (bool, int64, error) {
+	// Running
+	// scrub status for 751e6d40-a421-439b-bb73-ec9a53dc100e
+	// scrub started at Sat Oct 17 14:54:57 2020, running for 02:31:16
+	// total bytes scrubbed: 1.17TiB with 0 errors
+
+	// Done
+	// scrub status for 751e6d40-a421-439b-bb73-ec9a53dc100e
+	// scrub started at Sat Oct 17 14:54:57 2020 and finished after 09:10:31
+	// total bytes scrubbed: 4.29TiB with 0 errors
+
+	running := false
+	errors := int64(0)
+
+	if !d.Mounted {
+		return running, -1, nil
+	}
+
+	output, err := runCommand("/bin/btrfs", []string{"scrub", "status", d.GetTarget()}, []byte(""))
 	if err != nil {
-		return nil, err
+		return running, errors, err
 	}
 
-	// S.M.A.R..T. health
-	status.HealthRAW, err = status.ReadHealth()
-	if err != nil {
-		return nil, err
-	}
-
-	status.Health = "OK"
-	for _, healthRAW := range status.HealthRAW {
-		if healthRAW.PendingSectors > 0 && healthRAW.RelocatedSectors > 0 {
-			status.Health = "Bad sectors detected"
-			break
+	for _, line := range strings.Split(string(output), "\n") {
+		if strings.Contains(line, "running for") {
+			running = true
 		}
-		if !healthRAW.SMARTHealth {
-			status.Health = "S.M.A.R.T. self-test failure"
-		}
-	}
-
-	// Check for file system errors
-	if status.Health != "OK" {
-		for _, fsError := range status.FilesystemErrors {
-			if fsError.Total() > 0 {
-				status.Health = "filesystem errors detected"
-				break
+		if strings.Contains(line, "total bytes scrubbed") {
+			fields := strings.Fields(line)
+			value, err := strconv.Atoi(fields[len(fields)-2])
+			if err != nil {
+				return running, errors, err
 			}
+			errors = int64(value)
 		}
 	}
 
-	return &status, nil
+	return running, errors, nil
+
 }
 
 // MountDrive mounts drive defined in status variables
@@ -389,4 +375,117 @@ func (d *DriveStatus) CloseDrive() ([]byte, error) {
 		return out, err
 	}
 
+}
+
+// GetDriveStatus returns filled DriveStatus struct where information about the drive is saved.
+func GetDriveStatus(driveIndex uint) (*DriveStatus, error) {
+	var status DriveStatus
+
+	drive := config.Drives[driveIndex]
+
+	status.Name = drive.Name
+	status.UUID = drive.UUID
+	status.Encrypted = drive.Encrypted
+	status.Health = "unknown"
+	status.Raid = drive.Raid
+	status.RaidDevices = drive.RaidDevices
+
+	srcDriveName := status.Name
+	if status.Raid {
+		// In case of raid we check if the first device is opened or not.
+		// TODO: We should check all of them.
+		srcDriveName += "_0"
+	}
+
+	// Check if the drive is openned
+	if _, err := os.Stat(fmt.Sprintf(driveMapperPath, srcDriveName)); err == nil && status.Encrypted {
+		status.Opened = true
+	} else {
+		status.Opened = false
+	}
+
+	// Check if the drive is mounted
+	content, err := ioutil.ReadFile(mountsPath)
+	if err != nil {
+		return &status, err
+	}
+	mounts := bytes.Split(content, []byte("\n"))
+
+	for i := range mounts {
+		src := bytes.Split(mounts[i], []byte(" "))[0]
+		if string(src) == fmt.Sprintf(driveMapperPath, srcDriveName) {
+			status.Mounted = true
+			break
+		}
+	}
+
+	// Filesystem errors
+	status.FilesystemErrors, err = status.ReadFsErrors()
+	if err != nil {
+		return nil, err
+	}
+
+	// The checks at the beggining are more important compare to the checks at the end.
+	// We don't care about temperature when there are bad sectors on one of the drives
+	// for example.
+
+	// S.M.A.R..T. health
+	status.HealthRAW, err = status.ReadHealth()
+	if err != nil {
+		return nil, err
+	}
+
+	failures := []string{}
+	for _, healthRAW := range status.HealthRAW {
+		if healthRAW.PendingSectors > 0 && healthRAW.RelocatedSectors > 0 {
+			failures = append(failures, "bad sectors detected")
+		}
+		if !healthRAW.SMARTHealth {
+			failures = append(failures, "S.M.A.R.T. self-test failure")
+		}
+	}
+
+	// Check for file system errors
+	for _, fsError := range status.FilesystemErrors {
+		if fsError.Total() > 0 {
+			failures = append(failures, "filesystem errors detected")
+			break
+		}
+	}
+
+	// Scrub data
+	status.ScrubRunning, status.ScrubErrors, err = status.ScrubData()
+	if err != nil {
+		return nil, err
+	}
+	if status.ScrubErrors > 0 {
+		failures = append(failures, "scrub errors detected")
+	}
+
+	for _, healthRAW := range status.HealthRAW {
+		if healthRAW.Temperature == -99 {
+			failures = append(failures, "temperature of /dev/"+healthRAW.Device+" cannot be detected")
+		}
+		// What I have able to learn it seems that temperature and power cycles don't have much effect of life span
+		// of a drive so we want to know only about cases the temperature is clearly out of the range of normal
+		// operational range.
+		if healthRAW.Temperature >= 50 {
+			failures = append(failures, "temperature of /dev/"+healthRAW.Device+" is higher 50 °C ("+strconv.Itoa(healthRAW.Temperature)+" °C)")
+		}
+	}
+
+	// If empty, we will put OK into health field
+	status.Health = "OK"
+	if len(failures) > 0 {
+		status.Health = "PROBLEM"
+	}
+	status.Failures = failures
+
+	// Utilization stats
+	status.UsedBytes, status.TotalBytes, err = status.Df()
+	if err != nil {
+		return nil, err
+	}
+
+	return &status, nil
 }
