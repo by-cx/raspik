@@ -34,3 +34,6 @@ Software
  - device timeout
  - keepalive
  - checking SMART, btrfs errors and data integrity (healthcheck.io)
+
+Faster samba: https://gist.github.com/gogromat/d00305d823b970e9330b
+              https://wiki.amahi.org/index.php/Make_Samba_Go_Faster

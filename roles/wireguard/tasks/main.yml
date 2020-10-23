@@ -1,0 +1,87 @@
+---
+
+# This role creates WireGuard VPN. Nothing fancy, only pair of keys for all clients but I am alone so I don't need more :-)
+# To connect to the VPN use sample file at /etc/wireguard/client.conf.sample and change IP addresses and endpoint there.
+
+- name: Add testing repo
+  apt_repository:
+    repo: deb http://archive.raspbian.org/raspbian testing main
+    state: present
+
+- name: Put priority of the testing repo a little bit lower
+  shell: |
+    printf 'Package: *\nPin: release a=testing\nPin-Priority: 50\n' | sudo tee --append /etc/apt/preferences.d/limit-testing
+
+- name: Install a list of packages
+  apt:
+    update_cache: yes
+    pkg:
+    - raspberrypi-kernel-headers
+    - wireguard
+
+- name: Directory /etc/wireguard/
+  file:
+      path: /etc/wireguard/
+      mode: 700
+      state: directory
+
+- name: Check if wireguard is configured
+  stat:
+    path: /etc/wireguard/wg0.conf
+  register: stat_result
+
+- name: Generate keys and PSK
+  shell: |
+    cd /etc/wireguard
+    wg genkey > server.private.key
+    cat server.private.key | wg pubkey > server.public.key
+    wg genkey > client.private.key
+    cat client.private.key | wg pubkey > client.public.key
+    wg genpsk > psk.txt
+    chmod 600 *.key psk.txt
+  when: not stat_result.stat.exists
+
+- name: WireGuard config script generator
+  copy:
+    dest: /etc/wireguard/config.sh
+    mode: 700
+    content: |
+      #!/bin/sh
+
+      cat << EOF > /etc/wireguard/wg0.conf
+      [Interface]
+      Address = 192.168.2.1/24
+      ListenPort = 51820
+      # Pub key: `cat /etc/wireguard/server.public.key`
+      PrivateKey = `cat /etc/wireguard/server.private.key`
+
+      [Peer]
+      # Priv key: `cat /etc/wireguard/client.private.key`
+      PublicKey = `cat /etc/wireguard/client.public.key`
+      PresharedKey = `cat /etc/wireguard/psk.txt`
+      AllowedIPs = 192.168.2.0/24
+      EOF
+
+      cat << EOF > /etc/wireguard/client.conf.sample
+      [Interface]
+      Address = 192.168.2.2/24 # Change THIS if necessary
+      PrivateKey = `cat /etc/wireguard/client.private.key`
+
+      [Peer]
+      PublicKey = `cat /etc/wireguard/server.public.key`
+      PresharedKey = `cat /etc/wireguard/psk.txt`
+      #AllowedIPs = 192.168.2.0/24 # Only 192.168.2.0/24 subnet
+      AllowedIPs = 0.0.0.0/0 # Default route will be replaced and all traffic will go via wireguard
+      Endpoint = ceperka.net:51820 # Change THIS
+      PersistentKeepalive = 25
+      EOF
+
+- name: WireGuard config
+  shell: /etc/wireguard/config.sh
+
+- name: Wireguard service
+  service:
+      name: wg-quick@wg0
+      enabled: yes
+      state: started
+

@@ -13,9 +13,7 @@ end
 
 echo %self > $PIDFILE
 
-{% for key, value in backup.restic_env.items() %}
-set -x {{ key }} "{{ value }}"
-{% endfor %}
+source /etc/raspirack/backup_secrets.sh
 
 # Initialization of the repository, don't worry about fatal error if the repo is created :-)
 /usr/local/bin/restic init

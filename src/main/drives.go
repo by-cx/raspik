@@ -135,6 +135,11 @@ func (d *DriveStatus) ReadHealth() ([]Health, error) {
 					}
 					health.Temperature = value
 				}
+			} else if strings.Contains(line, "# 1  Extended offline") {
+				health.SMARTTestRunning = false
+				if strings.Contains(line, "Self-test routine in progress") {
+					health.SMARTHealth = true
+				}
 			}
 		}
 

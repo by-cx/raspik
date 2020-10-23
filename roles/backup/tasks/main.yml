@@ -12,6 +12,12 @@
     mv restic_{{ restic_version }}_linux_arm /usr/local/bin/restic
     chmod 755 /usr/local/bin/restic
 
+- name: Restic backup script secrets
+  template:
+      dest: /etc/raspirack/backup_secrets.sh
+      src: backup_secrets.sh
+      mode: 0600
+
 - name: Restic backup script
   template:
       dest: /usr/local/bin/backup.sh

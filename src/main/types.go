@@ -60,6 +60,7 @@ type Health struct {
 	RelocatedSectors int    `json:"relocated_sectors"`
 	PendingSectors   int    `json:"pending_sectors"`
 	Temperature      int    `json:"temperature"`
+	SMARTTestRunning bool   `json:"smart_test_running"`
 }
 
 // FileSystemErrors contains number of errors btrfs detected

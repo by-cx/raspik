@@ -1,0 +1,65 @@
+---
+
+- name: Check if node is installed
+  stat:
+    path: /opt/node
+  register: stat_result
+
+
+- name: Install Node.js 12
+  unarchive:
+    src: https://nodejs.org/dist/{{ node_version }}/node-{{ node_version }}-linux-armv7l.tar.xz
+    remote_src: yes
+    dest: /opt/
+  when: not stat_result.stat.exists
+
+- name: Move node into /opt/node
+  shell: mv /opt/node-{{ node_version }}-linux-armv7l /opt/node
+  when: not stat_result.stat.exists
+
+- name: Node-RED installation
+  shell: /opt/node/bin/npm install -g --unsafe-perm node-red
+
+- name: Node-RED service file
+  copy:
+      dest: /etc/systemd/system/node-red.service
+      content: |
+        # systemd service file to start Node-RED
+
+        [Unit]
+        Description=Node-RED graphical event wiring tool
+        Wants=network.target
+        Documentation=http://nodered.org/docs/hardware/raspberrypi.html
+
+        [Service]
+        Type=simple
+        # Run as normal pi user - change to the user name you wish to run Node-RED as
+        User=pi
+        Group=pi
+        WorkingDirectory=/home/pi
+
+        Nice=5
+        Environment="NODE_OPTIONS=--max_old_space_size=512"
+        Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/node/bin:/opt/node/bin"
+        # uncomment and edit next line if you need an http proxy
+        #Environment="HTTP_PROXY=my.httpproxy.server.address"
+        # uncomment the next line for a more verbose log output
+        #Environment="NODE_RED_OPTIONS=-v"
+        #ExecStart=/usr/bin/env node $NODE_OPTIONS red.js $NODE_RED_OPTIONS
+        ExecStart=/usr/bin/env node-red-pi $NODE_OPTIONS $NODE_RED_OPTIONS
+        # Use SIGINT to stop
+        KillSignal=SIGINT
+        # Auto restart on crash
+        Restart=on-failure
+        # Tag things in the log
+        SyslogIdentifier=Node-RED
+        #StandardOutput=syslog
+
+        [Install]
+        WantedBy=multi-user.target
+
+- name: enable Node-RED service
+  service:
+      name: node-red
+      enabled: yes
+      state: started
