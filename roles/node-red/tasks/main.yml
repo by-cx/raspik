@@ -5,8 +5,7 @@
     path: /opt/node
   register: stat_result
 
-
-- name: Install Node.js 12
+- name: Install Node.js
   unarchive:
     src: https://nodejs.org/dist/{{ node_version }}/node-{{ node_version }}-linux-armv7l.tar.xz
     remote_src: yes
@@ -17,8 +16,17 @@
   shell: mv /opt/node-{{ node_version }}-linux-armv7l /opt/node
   when: not stat_result.stat.exists
 
+# - name: Node-RED installation
+#   npm:
+#     executable: /opt/node/bin/npm
+#     name: node-red
+#     global: yes
+#     unsafe_perm: yes
+
 - name: Node-RED installation
-  shell: /opt/node/bin/npm install -g --unsafe-perm node-red
+  shell:
+    executable: /bin/bash
+    cmd: export PATH=$PATH:/opt/node/bin && /opt/node/bin/npm install -g --unsafe-perm node-red
 
 - name: Node-RED service file
   copy:

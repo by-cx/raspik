@@ -1,0 +1,84 @@
+---
+
+- name: installation (binary)
+  get_url:
+    dest: /usr/src/
+    url: https://github.com/caddyserver/caddy/releases/download/v{{caddy_version}}/caddy_{{caddy_version}}_linux_armv7.tar.gz
+
+- name: unarchive
+  unarchive:
+      src: /usr/src/caddy_{{caddy_version}}_linux_armv7.tar.gz
+      dest: /usr/src/
+      remote_src: yes
+
+- name: copy binary
+  copy:
+    dest: /usr/local/bin/
+    src: /usr/src/caddy
+    remote_src: yes
+    mode: 0755
+
+- name: enable caddy
+  service:
+      name: caddy
+      enabled: yes
+      state: stopped
+  ignore_errors: yes
+
+- name: group
+  group:
+      name: caddy
+      system: yes
+
+- name: user
+  user:
+      name: caddy
+      create_home: yes
+      home: /srv/caddy
+      group: caddy
+      shell: /bin/false
+      system: yes
+
+- name: service file
+  copy:
+    dest: /etc/systemd/system/caddy.service
+    content: |
+      [Unit]
+      Description=Caddy
+      Documentation=https://caddyserver.com/docs/
+      After=network.target network-online.target
+      Requires=network-online.target
+
+      [Service]
+      User=caddy
+      Group=caddy
+      ExecStart=/usr/local/bin/caddy run --environ --config /etc/caddy/Caddyfile
+      ExecReload=/usr/local/bin/caddy reload --config /etc/caddy/Caddyfile
+      TimeoutStopSec=5s
+      LimitNOFILE=1048576
+      LimitNPROC=512
+      PrivateTmp=true
+      ProtectSystem=full
+      AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: /etc/caddy/conf.d
+  file:
+    path: /etc/caddy/conf.d
+    state: directory
+    mode: 0755
+
+- name: configure caddyfile
+  copy:
+      dest: /etc/caddy/Caddyfile
+      content: |
+        import conf.d/*
+      mode: 0644
+
+- name: enable caddy
+  service:
+      name: caddy
+      enabled: yes
+      state: started
